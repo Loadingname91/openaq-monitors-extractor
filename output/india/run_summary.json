@@ -1,0 +1,19 @@
+{
+  "spec": {
+    "name": "India AQ Monitors",
+    "country_iso": "IN",
+    "pollutants": [
+      "pm25"
+    ],
+    "aggregation": "daily",
+    "date_range": {
+      "from": "2026-01-01",
+      "to": "2026-02-26"
+    }
+  },
+  "total_locations": 703,
+  "total_sensors": 988,
+  "total_measurements": 422485,
+  "output_directory": "/home/loadingname/ProfHolmes/AQIMoinitors/output/india",
+  "runtime_seconds": 4481.27
+}

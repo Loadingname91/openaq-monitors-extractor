@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openaq-extractor"
+version = "0.1.0"
+description = "CLI to extract OpenAQ monitor data from South Asia by country spec"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "openaq>=0.1.0",
+    "click>=8.0.0",
+    "pydantic>=2.0.0",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0.0",
+    "tqdm>=4.65.0",
+    "pandas>=2.0.0",
+]
+
+[project.scripts]
+openaq-extract = "openaq_extractor.cli:main"
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "pytest-mock>=3.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["openaq_extractor*"]

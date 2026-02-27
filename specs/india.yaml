@@ -1,0 +1,27 @@
+name: "India AQ Monitors"
+
+country:
+  iso: "IN"
+
+pollutants:
+  - pm25
+
+#
+# - pm10
+#  - no2
+#  - so2
+#  - o3
+#  - co
+
+aggregation: daily  # raw | hourly | daily | monthly | yearly
+
+date_range:
+  from: "2026-01-01"
+  to: "2026-02-26"
+
+output:
+  directory: "./output/india"
+
+filters:
+  monitor: null   # true = reference grade only, false = air sensors, null = both
+  mobile: null   # true = mobile, false = stationary, null = both
