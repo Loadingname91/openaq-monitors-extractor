@@ -1,0 +1,27 @@
+name: "Bhutan AQ Monitors"
+
+country:
+  iso: "BT"
+
+pollutants:
+  - pm25
+  - pm10
+  - no2
+  - so2
+  - o3
+  - co
+  - pm1
+  - um003
+
+aggregation: daily  # raw | hourly | daily | monthly | yearly
+
+date_range:
+  from: "2015-01-01"
+  to: "2025-12-31"
+
+output:
+  directory: "./output/bhutan"
+
+filters:
+  monitor: null   # true = reference grade only, false = air sensors, null = both
+  mobile: null   # true = mobile, false = stationary, null = both

@@ -5,19 +5,19 @@ country:
 
 pollutants:
   - pm25
-
-#
-# - pm10
-#  - no2
-#  - so2
-#  - o3
-#  - co
+  - pm10
+  - no2
+  - so2
+  - o3
+  - co
+  - pm1
+  - um003
 
 aggregation: daily  # raw | hourly | daily | monthly | yearly
 
 date_range:
-  from: "2026-01-01"
-  to: "2026-02-26"
+  from: "2015-01-01"
+  to: "2025-12-31"
 
 output:
   directory: "./output/india"
