@@ -87,6 +87,20 @@ def run_sensors(
                 last_val = s.latest.value
                 last_dt = s.latest.datetime.utc if s.latest.datetime else None
 
+            expected_interval = None
+            observed_interval = None
+            coverage_datetime_from = None
+            coverage_datetime_to = None
+            if s.coverage:
+                expected_interval = s.coverage.expected_interval
+                observed_interval = s.coverage.observed_interval
+                coverage_datetime_from = (
+                    s.coverage.datetime_from.utc if s.coverage.datetime_from else None
+                )
+                coverage_datetime_to = (
+                    s.coverage.datetime_to.utc if s.coverage.datetime_to else None
+                )
+
             sensors_rows.append({
                 "sensor_id": s.id,
                 "location_id": loc_id,
@@ -95,6 +109,14 @@ def run_sensors(
                 "parameter_units": s.parameter.units if s.parameter else "",
                 "last_value": last_val,
                 "last_datetime": last_dt,
+                # Native reporting cadence for this sensor, e.g. "00:15:00" (15-min)
+                # or "01:00:00" (hourly). None means OpenAQ has no expectation on file
+                # (often older/legacy sensors) - use "raw" aggregation to get whatever
+                # cadence the sensor actually reports at regardless of this value.
+                "expected_interval": expected_interval,
+                "observed_interval": observed_interval,
+                "coverage_datetime_from": coverage_datetime_from,
+                "coverage_datetime_to": coverage_datetime_to,
             })
 
     df = pd.DataFrame(sensors_rows)
