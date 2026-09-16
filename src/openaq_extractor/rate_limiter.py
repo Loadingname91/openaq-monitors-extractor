@@ -5,6 +5,7 @@ import re
 import time
 from typing import Callable, TypeVar
 
+import httpx
 from openaq.shared.exceptions import (
     BadGatewayError,
     GatewayTimeoutError,
@@ -19,6 +20,9 @@ T = TypeVar("T")
 logger = logging.getLogger("openaq_extractor.rate_limiter")
 
 # Exceptions that are safe to retry (exported for sensors/measurements)
+# httpx.TransportError covers connection-level failures (read/connect timeouts,
+# connection resets, etc.) that aren't wrapped in an OpenAQ-specific exception
+# but are just as transient as a 5xx.
 RETRYABLE_EXCEPTIONS = (
     RateLimitError,
     HTTPRateLimitError,
@@ -26,6 +30,7 @@ RETRYABLE_EXCEPTIONS = (
     BadGatewayError,
     ServiceUnavailableError,
     GatewayTimeoutError,
+    httpx.TransportError,
 )
 
 # Regex to extract "Limit resets in N seconds" from rate limit error messages
