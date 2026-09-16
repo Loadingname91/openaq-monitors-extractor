@@ -1,7 +1,7 @@
-name: "India AQ Monitors"
+name: "Bangladesh AQ Monitors"
 
 country:
-  iso: "IN"
+  iso: "BD"
 
 pollutants:
   - pm25
@@ -18,7 +18,7 @@ date_range:
   to: "2025-12-31"
 
 output:
-  directory: "./output/india"
+  directory: "./output/bangladesh"
 
 filters:
   monitor: null   # true = reference grade only, false = air sensors, null = both
