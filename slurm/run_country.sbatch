@@ -23,7 +23,9 @@ REPO="/scratch/general/vast/u1522135/openaq-extractor-run"
 ENV_FILE="/uufs/chpc.utah.edu/common/home/holmes-group3/Hitesh/.env"
 cd "$REPO"
 
-module load python/3.10.3 >/dev/null 2>&1
+# Note: do NOT `module load` anything here - Lmod itself is broken on the
+# notchpeak-dtn nodes (missing lua posix module). The venv was built with
+# the DTN nodes' default system python3, so it's self-contained.
 
 export PYTHONPATH="$REPO/src"
 export OPENAQ_API_KEY
@@ -37,7 +39,7 @@ if [[ ! -f "$SPEC" ]]; then
     exit 1
 fi
 
-POLLUTANTS="$(awk '/^pollutants:/{f=1;next} /^[a-z]/{f=0} f' "$SPEC" | tr -d ' -' | paste -sd, -)"
+POLLUTANTS="$(grep '^  - ' "$SPEC" | sed 's/^  - //' | paste -sd, -)"
 AGGREGATION="$(awk -F': ' '/^aggregation:/{print $2}' "$SPEC" | awk '{print $1}')"
 
 echo "=== $(date -u +%FT%TZ) : starting country=${COUNTRY} aggregation=${AGGREGATION} pollutants=${POLLUTANTS} ==="
