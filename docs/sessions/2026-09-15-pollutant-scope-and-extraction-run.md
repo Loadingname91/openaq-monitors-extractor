@@ -59,16 +59,31 @@ Working session covering the OpenAQ extraction scope defined in `docs/objective.
    - Nepal: 262 sensors, 59,694 measurements — done.
    - Pakistan: 828 sensors, 215,990 measurements, 58 locations skipped — done.
    - India: 5,961 sensors, 21 locations skipped — sensors phase done; measurements
-     phase crashed once (see bug above) and was restarted with the fix applied.
-     Status at end of session: **in progress**, see `output/india/run_summary.json`
-     and `output/india/openaq-extract.log` for latest state.
+     phase crashed once (see bug above), was restarted with the fix applied, and
+     completed cleanly on retry: 3,005,698 measurements, 6,340 API calls, 3.8
+     hours. No further crashes — the `httpx.TransportError` fix held.
+
+**Final totals, all 5 countries, full 2015–2025 / 8-pollutant extraction complete:**
+
+| Country | Sensors | Measurements | Skipped locations |
+|---|---:|---:|---:|
+| Bhutan | 50 | 8,450 | 0 |
+| Bangladesh | 63 | 11,027 | 0 |
+| Nepal | 262 | 59,694 | 0 |
+| Pakistan | 828 | 215,990 | 58 |
+| India | 5,961 | 3,005,698 | 21 |
+| **Total** | **7,164** | **~3,300,859** | **79** |
 
 ## Next steps
 
-- Confirm India's measurements phase completes cleanly under the fix.
+- [x] Confirm India's measurements phase completes cleanly under the fix. Done
+  2026-09-16.
 - Decide whether to add incremental checkpointing to `run_measurements` so a
-  country-level crash doesn't require a full restart.
-- Merge `worktree-objective-pollutant-scope` into `main` once India's run is
-  verified complete.
+  future country-level crash doesn't require a full restart (not yet done —
+  still a latent risk for any future re-run).
+- Merge `worktree-objective-pollutant-scope` into `main` now that all 5
+  countries' extraction is verified complete.
 - Update `docs/objective.md` deliverables checklist (Station & Location
-  Inventory, Historical Dataset, Methodology docs) as each is finished.
+  Inventory, Historical Dataset) — both now substantively done, modulo the 79
+  permanently-skipped locations across India/Pakistan.
+- Methodology & Coverage Documentation deliverable still outstanding.
