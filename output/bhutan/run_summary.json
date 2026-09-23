@@ -1,0 +1,26 @@
+{
+  "spec": {
+    "name": "Bhutan AQ Monitors",
+    "country_iso": "BT",
+    "pollutants": [
+      "pm25",
+      "pm10",
+      "no2",
+      "so2",
+      "o3",
+      "co",
+      "pm1",
+      "um003"
+    ],
+    "aggregation": "daily",
+    "date_range": {
+      "from": "2015-01-01",
+      "to": "2025-12-31"
+    }
+  },
+  "total_locations": 18,
+  "total_sensors": 50,
+  "total_measurements": 8450,
+  "output_directory": "/uufs/chpc.utah.edu/common/home/holmes-group3/Hitesh/openaq-monitors-extractor/.claude/worktrees/objective-pollutant-scope/output/bhutan",
+  "runtime_seconds": 116.29
+}

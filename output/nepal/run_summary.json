@@ -1,0 +1,26 @@
+{
+  "spec": {
+    "name": "Nepal AQ Monitors",
+    "country_iso": "NP",
+    "pollutants": [
+      "pm25",
+      "pm10",
+      "no2",
+      "so2",
+      "o3",
+      "co",
+      "pm1",
+      "um003"
+    ],
+    "aggregation": "daily",
+    "date_range": {
+      "from": "2015-01-01",
+      "to": "2025-12-31"
+    }
+  },
+  "total_locations": 88,
+  "total_sensors": 262,
+  "total_measurements": 59694,
+  "output_directory": "/uufs/chpc.utah.edu/common/home/holmes-group3/Hitesh/openaq-monitors-extractor/.claude/worktrees/objective-pollutant-scope/output/nepal",
+  "runtime_seconds": 648.93
+}

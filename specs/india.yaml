@@ -10,6 +10,8 @@ pollutants:
   - so2
   - o3
   - co
+  - pm1
+  - um003
 
 aggregation: daily  # raw | hourly | daily | monthly | yearly
 

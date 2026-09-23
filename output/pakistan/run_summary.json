@@ -1,0 +1,26 @@
+{
+  "spec": {
+    "name": "Pakistan AQ Monitors",
+    "country_iso": "PK",
+    "pollutants": [
+      "pm25",
+      "pm10",
+      "no2",
+      "so2",
+      "o3",
+      "co",
+      "pm1",
+      "um003"
+    ],
+    "aggregation": "daily",
+    "date_range": {
+      "from": "2015-01-01",
+      "to": "2025-12-31"
+    }
+  },
+  "total_locations": 446,
+  "total_sensors": 828,
+  "total_measurements": 215990,
+  "output_directory": "/uufs/chpc.utah.edu/common/home/holmes-group3/Hitesh/openaq-monitors-extractor/.claude/worktrees/objective-pollutant-scope/output/pakistan",
+  "runtime_seconds": 10135.11
+}
