@@ -56,3 +56,6 @@ openaq-extract.log
 # ide files
 .cursor/
 
+# Large data files that exceed GitHub's 100MB limit -- kept on CHPC storage only
+output/india/measurements.csv
+
