@@ -1,0 +1,7 @@
+location_id,name,role,ours_days_2022,ours_days_2023,ours_days_2024,sensors,api_gap_days,api_days_2022,api_last_before_gap,api_first_after_gap,meta_spans_gap,hourly_2023,raw_2023,errors,verdict
+7044,"R K Puram, Delhi - DPCC",gap,192,0,0,20411[2018-08-10..2022-10-31],0,191,2022-10-30,,False,0,0,,OPENAQ ARCHIVE GAP (OpenAQ lists no PM2.5 sensor here active during the gap)
+6931,"Dwarka-Sector 8, Delhi - DPCC",gap,191,0,0,20150[2018-08-10..2022-10-31] 12235020[2025-02-18..2026-10-07],0,190,2022-10-30,2025-02-18,False,0,0,,OPENAQ ARCHIVE GAP (OpenAQ lists no PM2.5 sensor here active during the gap)
+5638,"Indira Colony Vistar, Pali - RSPCB",gap,192,0,0,15043[2018-03-09..2022-10-31] 12234867[2025-02-18..2026-10-07],0,191,2022-10-30,2025-02-18,False,0,0,,OPENAQ ARCHIVE GAP (OpenAQ lists no PM2.5 sensor here active during the gap)
+2456,"Talkatora District Industries Center, Lucknow - CPCB",gap,192,0,0,14237[2017-02-18..2022-10-31] 12235574[2025-02-18..2026-10-07],0,191,2022-10-30,2025-02-18,False,0,0,,OPENAQ ARCHIVE GAP (OpenAQ lists no PM2.5 sensor here active during the gap)
+5648,"Ward-32 Bapupara, Siliguri - WBPCB",gap,192,0,0,15079[2018-03-09..2022-10-31] 12234993[2025-02-18..2026-10-07],0,191,2022-10-30,2025-02-18,False,0,0,,OPENAQ ARCHIVE GAP (OpenAQ lists no PM2.5 sensor here active during the gap)
+3174188,Malav,control,0,341,179,11056921[2023-01-09..2024-06-30],520,0,,,True,143,32,,NO GAP

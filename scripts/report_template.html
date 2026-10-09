@@ -1,0 +1,900 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>South Asia PM2.5 Coverage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..600;1,8..60,400&display=swap">
+<style>
+/* Layout: one left-aligned reading column (~68ch); the map and charts break out into a wider frame.
+   Haze-grey ground and slate ink; data colors follow the dataviz palette
+   (blue = reference monitor, orange = low-cost sensor, blue ramp = days of data). */
+:root {
+  --ground: #edf1f2;
+  --surface: #f9fbfb;
+  --ink: #15212a;
+  --ink-2: #485862;
+  --ink-3: #6f7f88;
+  --rule: #d3dcdf;
+  --accent: #1c5cab;
+  --land: #e2e8ea;
+  --land-edge: #b3c0c5;
+  --warn: #8a5000;
+  --warn-bg: #f8ecd6;
+  --warn-edge: #e2b866;
+  --band: rgba(178, 107, 0, 0.11);
+  --monitor: #2a78d6;
+  --lowcost: #eb6834;
+  --seq-lo: #cde2fb;
+  --seq-mid: #3987e5;
+  --seq-hi: #0d366b;
+  --empty: #8c989f;
+  --f-display: "Bricolage Grotesque", "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  --f-text: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --measure: 68ch;
+  --wide: 1180px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #10161a; --surface: #161e24; --ink: #e3e9ec; --ink-2: #a5b2ba; --ink-3: #7e8c94;
+    --rule: #29343c; --accent: #86b6ef; --land: #1d272e; --land-edge: #3e4c55;
+    --warn: #f0b357; --warn-bg: #2a2114; --warn-edge: #6e5226; --band: rgba(240, 179, 87, 0.12);
+    --monitor: #3987e5; --lowcost: #d95926; --seq-lo: #184f95; --seq-mid: #3987e5; --seq-hi: #cde2fb;
+    --empty: #6c7980; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #10161a; --surface: #161e24; --ink: #e3e9ec; --ink-2: #a5b2ba; --ink-3: #7e8c94;
+  --rule: #29343c; --accent: #86b6ef; --land: #1d272e; --land-edge: #3e4c55;
+  --warn: #f0b357; --warn-bg: #2a2114; --warn-edge: #6e5226; --band: rgba(240, 179, 87, 0.12);
+  --monitor: #3987e5; --lowcost: #d95926; --seq-lo: #184f95; --seq-mid: #3987e5; --seq-hi: #cde2fb;
+  --empty: #6c7980; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--f-text);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  padding-inline: clamp(16px, 4vw, 48px);
+  padding-block: 0 4rem;
+}
+.page { max-width: var(--wide); margin: 0 auto; display: grid; gap: 3.5rem; }
+.col { max-width: var(--measure); }
+h1, h2, h3, .ui { font-family: var(--f-display); }
+h1, h2, h3 { text-wrap: balance; margin: 0; color: var(--ink); }
+h1 { font-size: clamp(2.2rem, 5.5vw, 3.6rem); font-weight: 650; line-height: 1.02; letter-spacing: -0.02em; font-variation-settings: "opsz" 96; }
+h2 { font-size: 1.6rem; font-weight: 620; line-height: 1.2; letter-spacing: -0.01em; }
+h3 { font-size: 1.1rem; font-weight: 600; line-height: 1.3; }
+p { margin: 0; }
+a { color: var(--accent); text-underline-offset: 0.15em; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.88em; }
+.num { font-variant-numeric: tabular-nums lining-nums; }
+.muted { color: var(--ink-2); }
+.small { font-size: 0.9rem; }
+section { display: grid; gap: 1.1rem; }
+.stack { display: grid; gap: 1rem; }
+
+/* masthead */
+.masthead { padding-top: clamp(2rem, 6vw, 4.5rem); display: grid; gap: 1rem; }
+.dek { font-size: 1.2rem; line-height: 1.5; color: var(--ink-2); max-width: 60ch; }
+.meta { font-family: var(--f-display); font-size: 0.85rem; color: var(--ink-3); }
+
+/* key numbers */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-top: 0.5rem; }
+.kpi { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; display: grid; gap: 4px; align-content: start; }
+.kpi .v { font-family: var(--f-display); font-size: 2rem; font-weight: 650; line-height: 1.05; letter-spacing: -0.01em; color: var(--ink); }
+.kpi .l { font-family: var(--f-display); font-size: 0.86rem; color: var(--ink-2); line-height: 1.35; }
+.kpi.warn { background: var(--warn-bg); border-color: var(--warn-edge); }
+.kpi.warn .v { color: var(--warn); }
+
+/* short answers */
+ol.answers { margin: 0; padding-left: 1.3rem; display: grid; gap: 0.8rem; }
+ol.answers strong { font-family: var(--f-display); font-weight: 620; }
+
+/* one filter row that scopes the map and the monthly chart */
+.filterbar {
+  position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 20px;
+  background: var(--ground); padding: 10px 0; border-bottom: 1px solid var(--rule); margin-bottom: -2rem;
+}
+.filterbar .hint { font-family: var(--f-display); font-size: 0.82rem; color: var(--ink-3); padding-bottom: 8px; }
+.map-hint { font-family: var(--f-display); font-size: 0.86rem; color: var(--ink-2); max-width: 70ch; }
+
+/* map */
+.map-panel { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: clamp(12px, 2vw, 20px); display: grid; gap: 14px; }
+.map-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 24px; }
+.readout { font-family: var(--f-display); font-size: 1rem; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.readout strong { color: var(--ink); font-weight: 650; }
+.controls { display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: flex-end; }
+.ctl { display: grid; gap: 6px; min-width: 0; }
+.ctl-label { font-family: var(--f-display); font-size: 0.8rem; color: var(--ink-3); }
+.btn, select, .seg button, .tape button {
+  font-family: var(--f-display); font-size: 0.88rem; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; cursor: pointer;
+}
+.btn { padding: 6px 12px; min-height: 36px; }
+.btn:hover, .seg button:hover, select:hover { border-color: var(--ink-3); }
+select { padding: 6px 10px; min-height: 36px; }
+.seg { display: inline-flex; }
+.seg button { padding: 6px 12px; min-height: 36px; border-radius: 0; margin-left: -1px; }
+.seg button:first-child { border-radius: 6px 0 0 6px; margin-left: 0; }
+.seg button:last-child { border-radius: 0 6px 6px 0; }
+.seg button[aria-checked="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); position: relative; }
+.seg button:disabled { cursor: not-allowed; opacity: 0.45; }
+
+/* year tape: each year button carries a bar showing how many locations reported that year */
+.tape-wrap { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.tape { display: grid; grid-template-columns: repeat(12, minmax(34px, 1fr)); gap: 3px; flex: 1 1 520px; min-width: 0; }
+.tape button {
+  display: grid; grid-template-rows: 34px auto; align-items: end; gap: 3px;
+  padding: 4px 2px 3px; border-color: transparent; background: transparent; border-radius: 5px;
+}
+.tape button:hover { background: var(--ground); }
+.tape button[aria-pressed="true"] { background: var(--ground); border-color: var(--ink); }
+.tape .bar { width: 62%; margin: 0 auto; background: var(--ink-3); border-radius: 2px 2px 0 0; min-height: 1px; }
+.tape button[aria-pressed="true"] .bar { background: var(--ink); }
+.tape .yl { font-size: 0.78rem; color: var(--ink-2); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.tape button[aria-pressed="true"] .yl { color: var(--ink); font-weight: 650; }
+.tape .gap .bar { background: var(--warn); }
+
+.map-frame { position: relative; }
+#map { display: block; width: 100%; height: auto; touch-action: manipulation; }
+.legend { display: flex; flex-wrap: wrap; gap: 10px 26px; align-items: center; font-family: var(--f-display); font-size: 0.82rem; color: var(--ink-2); }
+.legend .key { display: inline-flex; align-items: center; gap: 7px; }
+.legend svg { overflow: visible; }
+.ramp-wrap { display: inline-grid; gap: 3px; }
+.ramp { width: 170px; height: 9px; border-radius: 2px; }
+.ramp-ticks { display: flex; justify-content: space-between; width: 170px; font-size: 0.72rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+.tooltip {
+  position: absolute; z-index: 5; pointer-events: none; max-width: 260px;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--rule); border-radius: 8px;
+  box-shadow: 0 6px 24px rgba(10, 20, 30, 0.16); padding: 9px 11px;
+  font-family: var(--f-display); font-size: 0.82rem; line-height: 1.4;
+}
+.tooltip .tt-title { font-weight: 650; margin-bottom: 3px; }
+.tooltip .tt-row { display: flex; justify-content: space-between; gap: 14px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.tooltip .tt-row b { color: var(--ink); font-weight: 600; }
+.tooltip .sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: 0; }
+
+/* findings */
+.alert {
+  display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: start;
+  background: var(--warn-bg); border: 1px solid var(--warn-edge); border-radius: 10px; padding: 16px 18px;
+}
+.alert svg { grid-row: span 2; margin-top: 3px; color: var(--warn); }
+.alert h3 { color: var(--ink); }
+.alert .alert-tag { font-family: var(--f-display); font-size: 0.8rem; font-weight: 650; color: var(--warn); }
+.alert p + p { margin-top: 0.5rem; }
+.qa { display: grid; gap: 1.6rem; margin: 0; }
+.qa dt { font-family: var(--f-display); font-weight: 600; font-size: 1.08rem; margin-bottom: 0.25rem; }
+.qa dd { margin: 0; color: var(--ink); }
+.qa dd p + p { margin-top: 0.5rem; }
+
+/* charts */
+.chart-panel { position: relative; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: clamp(12px, 2vw, 20px); display: grid; gap: 12px; min-width: 0; }
+.multiples { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 18px 22px; }
+.multiples figure { margin: 0; min-width: 0; }
+.multiples figcaption { font-family: var(--f-display); font-weight: 600; font-size: 0.95rem; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart text { font-family: var(--f-display); fill: var(--ink-3); font-size: 12px; font-variant-numeric: tabular-nums; }
+.multiples text { font-size: 10px; }
+.chart text.warn { fill: var(--warn); font-weight: 600; }
+.chart .lbl { fill: var(--ink-2); }
+.chart .axis line, .chart .axis path { stroke: var(--rule); }
+.chart .grid line { stroke: var(--rule); }
+.chart-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px 20px; }
+.chart-wrap { position: relative; }
+
+details { font-family: var(--f-display); font-size: 0.9rem; }
+details summary { cursor: pointer; color: var(--accent); width: fit-content; }
+details[open] summary { margin-bottom: 10px; }
+.table-scroll { overflow-x: auto; max-width: 100%; }
+table { border-collapse: collapse; font-family: var(--f-display); font-size: 0.86rem; font-variant-numeric: tabular-nums; min-width: 100%; }
+th, td { padding: 6px 10px; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+th:first-child, td:first-child, th.l, td.l { text-align: left; }
+thead th { color: var(--ink-2); font-weight: 600; border-bottom-color: var(--ink-3); }
+tbody tr.total td { font-weight: 650; border-top: 1px solid var(--ink-3); }
+td.gapcell { color: var(--warn); font-weight: 650; }
+
+/* methods */
+.defs { display: grid; grid-template-columns: minmax(130px, 11rem) 1fr; gap: 0.7rem 1.4rem; margin: 0; }
+.defs dt { font-family: var(--f-display); font-weight: 600; font-size: 0.95rem; }
+.defs dd { margin: 0; }
+ol.caveats { margin: 0; padding-left: 1.3rem; display: grid; gap: 0.7rem; }
+pre { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 12px 14px; overflow-x: auto; margin: 0; font-size: 0.85rem; line-height: 1.5; }
+footer { color: var(--ink-3); font-family: var(--f-display); font-size: 0.82rem; border-top: 1px solid var(--rule); padding-top: 1rem; }
+
+@media (max-width: 640px) {
+  .defs { grid-template-columns: 1fr; gap: 0.2rem; }
+  .defs dd { margin-bottom: 0.7rem; }
+  .tape { grid-template-columns: repeat(6, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+</style>
+
+<div class="page">
+
+<header class="masthead">
+  <h1>South Asia PM2.5 Coverage</h1>
+  <p class="dek">I mapped where and when OpenAQ has daily PM2.5 data for India, Pakistan, Nepal, Bangladesh and Bhutan from 2015 to 2025. I wanted to settle three questions: which year my analysis can start, whether I need Berkeley Earth gridded data to fill in space, and where more low-cost sensors would help.</p>
+  <p class="meta">Built <span id="gen"></span> from my OpenAQ v3 daily extraction (<span class="num" id="m-locs"></span> locations, <span class="num" id="m-sensors"></span> PM2.5 sensors).</p>
+  <div class="kpis" role="list" aria-label="Key numbers">
+    <div class="kpi" role="listitem"><span class="v" id="k-with"></span><span class="l">locations with PM2.5 data, out of <span id="k-locs"></span> registered</span></div>
+    <div class="kpi" role="listitem"><span class="v" id="k-days"></span><span class="l">location-days of PM2.5 data, 2015 to 2025</span></div>
+    <div class="kpi" role="listitem"><span class="v" id="k-india"></span><span class="l">of those days come from India's reference monitors</span></div>
+    <div class="kpi warn" role="listitem"><span class="v" id="k-gap"></span><span class="l">with no India reference data in OpenAQ (Nov 2022 to Jan 2025)</span></div>
+  </div>
+</header>
+
+<section class="col" aria-labelledby="find-h">
+  <h2 id="find-h">What I found</h2>
+  <ol class="answers">
+    <li><strong>Which year can I start?</strong> 2018, and only for India. The other four countries have one to eight reference sites each before 2025, so they need gridded data until then.</li>
+    <li><strong>Do I need Berkeley Earth?</strong> Yes, for most of the region outside India's cities and for India's 2023 to 2024 gap.</li>
+    <li><strong>Would more low-cost sensors help?</strong> Yes, where neither network reaches, but the low-cost sensors already deployed have almost no history.</li>
+  </ol>
+
+  <div class="alert" role="note">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 10v4.5M12 17.2v.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <span class="alert-tag">Confirmed gap in OpenAQ</span>
+    <div>
+      <h3>India's reference network is missing from November 2022 to January 2025</h3>
+      <p>Active India locations drop from <strong class="num" id="g-oct22"></strong> in October 2022 to <strong class="num" id="g-nov22"></strong> in November 2022 and don't recover until February 2025, when there are <strong class="num" id="g-feb25"></strong>. All six CPCB pollutants disappear in the same month.</p>
+      <p>To rule out my own extraction, I queried the OpenAQ API directly for five CPCB and state-board stations (<code>scripts/check_india_gap.py</code>). None of them had data in the gap at daily, hourly or raw resolution. Each station's old sensor stops on 2022-10-31, and where OpenAQ added a replacement, the new sensor starts on 2025-02-18. A control station that reported through 2023 and 2024 came back complete, so the check works. OpenAQ's own metadata also puts the last reading of all 316 affected India PM2.5 sensors in September or October 2022. The gap is in OpenAQ's archive.</p>
+      <p>Downloading from OpenAQ again won't fill it. For India in 2023 and 2024 I'll have to use the CPCB CCR portal or a gridded PM2.5 product. OpenAQ's 2022 record for India is also partial, about 190 of 304 days from January to October at these stations, and my data matches it.</p>
+    </div>
+  </div>
+
+</section>
+
+<div class="filterbar" role="region" aria-label="Filter">
+  <div class="ctl">
+    <label class="ctl-label" for="country">Country</label>
+    <select id="country"></select>
+  </div>
+  <span class="hint">Applies to the map and the month-by-month chart.</span>
+</div>
+
+<section aria-labelledby="map-h">
+  <div class="map-panel">
+    <div class="map-head">
+      <h2 id="map-h">Every PM2.5 location</h2>
+      <p class="readout" id="map-readout" aria-live="polite"></p>
+    </div>
+    <p class="map-hint">Each mark is one station. Circles are reference monitors and triangles are low-cost sensors; darker blue means more days with data. Pick a year to see that year alone, or press Play to step through 2015 to 2025.</p>
+    <div class="controls">
+      <div class="ctl" style="flex: 1 1 560px;">
+        <span class="ctl-label" id="tape-label">Year. Bar height is the number of locations that reported PM2.5 that year.</span>
+        <div class="tape-wrap">
+          <button class="btn" id="play" type="button" aria-label="Play through the years">Play</button>
+          <div class="tape" id="tape" role="group" aria-labelledby="tape-label"></div>
+        </div>
+      </div>
+      <div class="ctl">
+        <span class="ctl-label" id="metric-label">Count a day when</span>
+        <div class="seg" role="radiogroup" aria-labelledby="metric-label" id="metric">
+          <button type="button" role="radio" aria-checked="true" data-metric="days">Any data</button>
+          <button type="button" role="radio" aria-checked="false" data-metric="days75">≥75% of hours</button>
+        </div>
+      </div>
+    </div>
+    <div class="map-frame">
+      <svg id="map" role="img" aria-labelledby="map-h map-readout"></svg>
+      <div class="tooltip" id="tip" hidden></div>
+    </div>
+    <div class="legend" id="map-legend"></div>
+  </div>
+</section>
+
+<section aria-labelledby="yr-h">
+  <div class="col stack">
+    <h2 id="yr-h">Active locations per year</h2>
+    <p class="muted">A location counts as active when it reports PM2.5 on at least 30 days that year. Each country has its own vertical scale, so compare shapes across panels, not bar heights.</p>
+  </div>
+  <div class="chart-panel">
+    <div class="legend" id="yr-legend"></div>
+    <div class="multiples chart" id="yr-chart"></div>
+    <div class="tooltip" id="yr-tip" hidden></div>
+    <details>
+      <summary>Show as a table</summary>
+      <div class="table-scroll"><table id="yr-table"></table></div>
+    </details>
+  </div>
+</section>
+
+<section aria-labelledby="mo-h">
+  <div class="col stack">
+    <h2 id="mo-h">Month by month</h2>
+    <p class="muted">Locations with any PM2.5 data in each month, for the country picked in the filter above. The shaded span is the period when India's reference data is missing from OpenAQ.</p>
+  </div>
+  <div class="chart-panel">
+    <div class="chart-head">
+      <div class="legend" id="mo-legend"></div>
+      
+    </div>
+    <div class="chart-wrap chart" id="mo-chart"><div class="tooltip" id="mo-tip" hidden></div></div>
+  </div>
+</section>
+
+<section aria-labelledby="len-h">
+  <div class="col stack">
+    <h2 id="len-h">How long each location has reported</h2>
+    <p class="muted">Days with PM2.5 data per location over 2015 to 2025, in half-year bins. Most low-cost locations have under six months of data, while reference monitors range up to several years.</p>
+  </div>
+  <div class="chart-panel">
+    <div class="legend" id="len-legend"></div>
+    <div class="chart-wrap chart" id="len-chart"><div class="tooltip" id="len-tip" hidden></div></div>
+  </div>
+</section>
+
+<section aria-labelledby="size-h">
+  <div class="col stack">
+    <h2 id="size-h">Network size by country</h2>
+    <p class="muted">All figures cover 2015 to 2025. Median days counts every location, including those that never reported.</p>
+  </div>
+  <div class="table-scroll"><table id="size-table"></table></div>
+</section>
+
+<section class="col" aria-labelledby="detail-h">
+  <h2 id="detail-h">The answers in detail</h2>
+  <dl class="qa">
+    <div>
+      <dt>How many locations, and how much data?</dt>
+      <dd><p><span class="num" id="q-locs"></span> locations have a PM2.5 sensor and <span class="num" id="q-with"></span> of them have data between 2015 and 2025, for a total of <span class="num" id="q-days"></span> location-days. <span id="q-pct75"></span> of those days meet the ≥75% hourly-coverage rule, so the stricter definition trims records but leaves the map looking the same. India's reference monitors account for <span id="q-india-share"></span> of all location-days.</p></dd>
+    </div>
+    <div>
+      <dt>How many sensors in 2019, 2020 and later?</dt>
+      <dd><p>Counting locations that reported on at least 30 days in a year, across all five countries: <span id="q-yearlist"></span>. Almost all the low-cost sensors arrived in 2025, with <span class="num" id="q-lc24"></span> active in 2024 against <span class="num" id="q-lc25"></span> in 2025. The yearly chart above breaks this down by country.</p></dd>
+    </div>
+    <div>
+      <dt>When should my analysis start?</dt>
+      <dd><p>No country has PM2.5 data in 2015. India's national network starts in 2018 with <span class="num" id="q-in18"></span> active locations, rising to <span class="num" id="q-in22"></span> by 2022. Before that it is 30 to 40 sites in large cities.</p><p>Pakistan, Nepal and Bangladesh have one to eight reference sites each before 2025, mostly US diplomatic-post monitors. Starting in 2018 gives me a usable multi-year ground record for India only. If I analyze all five countries, I'll need a gridded product for the other four before 2025.</p></dd>
+    </div>
+    <div>
+      <dt>Do I need Berkeley Earth to increase resolution?</dt>
+      <dd><p>Yes, for most of the region outside India's cities. The map has no long-record station across western and southern Pakistan (Balochistan, Sindh outside Karachi), central India (Madhya Pradesh, Chhattisgarh, interior Odisha), the Nepal hills and Terai outside Kathmandu, all of Bhutan, and rural Bangladesh. A gridded product could also cover India's 2023 to 2024 gap in OpenAQ. Before I commit, I need to confirm Berkeley Earth's grid resolution and its 2018 to 2025 coverage for South Asia.</p></dd>
+    </div>
+    <div>
+      <dt>Would more low-cost sensors help?</dt>
+      <dd><p>They add spatial density now, but they have almost no history yet. Low-cost locations in Pakistan and Nepal have a median of only <span id="q-lcmed"></span> days of data. Northern Pakistan (Lahore, Islamabad, Peshawar) and the Kathmandu valley already have dense coverage. New sensors would help most where neither network reaches: the regions listed above, and Bangladesh, where <span id="q-bd-silent"></span> registered low-cost sensors have never reported.</p></dd>
+    </div>
+  </dl>
+</section>
+
+<section class="col" aria-labelledby="meth-h">
+  <h2 id="meth-h">Method</h2>
+  <p>I pulled the data from the <a href="https://openaq.org" target="_blank" rel="noopener">OpenAQ</a> v3 API with my <code>openaq-monitors-extractor</code> pipeline, which finds locations, lists their sensors, fetches daily measurements and writes a summary. The extraction covers eight pollutants from 2015-01-01 to 2025-12-31 at daily aggregation. Each row is one sensor on one local day, and OpenAQ's <code>coverage_percent</code> gives the share of expected readings present. This page uses PM2.5 only.</p>
+  <dl class="defs">
+    <dt>Location</dt><dd>An OpenAQ station with at least one PM2.5 sensor. Days are distinct dates across all PM2.5 sensors at the location, so two co-located sensors are not counted twice.</dd>
+    <dt>Monitor or low-cost</dt><dd>OpenAQ's <code>is_monitor</code> flag. Reference-grade monitors are mostly CPCB and state boards in India and US diplomatic posts elsewhere; low-cost sensors are mostly AirGradient units.</dd>
+    <dt>Day with data</dt><dd>The location reported any daily PM2.5 value.</dd>
+    <dt>≥75% of hours</dt><dd>At least one PM2.5 sensor at the location had <code>coverage_percent ≥ 75</code> that day, about 18 of 24 hours.</dd>
+    <dt>Active in a year</dt><dd>At least 30 days with data in that calendar year, so a sensor with one stray reading doesn't inflate the count.</dd>
+  </dl>
+  <h3>Caveats</h3>
+  <ol class="caveats">
+    <li>The India gap above. OpenAQ has no India reference data from November 2022 to January 2025, so India's 2023 and 2024 counts don't reflect the real network size.</li>
+    <li>My extraction returned 195,348 PM2.5 sensor-days dated 2026 (up to 2026-09-14) despite the 2025-12-31 end date. I excluded them here. Bhutan's network started on 2025-10-16, so 2,841 of its 2,890 PM2.5 sensor-days fall in 2026, which is why Bhutan shows almost nothing on this page.</li>
+    <li><span id="c-silent"></span> locations have a PM2.5 sensor but no data in the window. Most are low-cost sensors in India and Bangladesh that are registered in OpenAQ but have never reported.</li>
+    <li>I excluded 79 locations (21 India, 58 Pakistan) because OpenAQ returns a reproducible server error for them.</li>
+    <li>Map borders are Natural Earth 1:110m outlines, for orientation only.</li>
+  </ol>
+  <h3>Reproduce</h3>
+  <p>From the <code>openaq-monitors-extractor</code> repository on CHPC:</p>
+  <pre><code>sbatch scripts/pm25_coverage.slurm   # coverage tables, PNG figures and this page (~20 s)
+python3 scripts/build_report.py      # rebuild only this page from existing tables</code></pre>
+  <p class="small muted">Tables behind this page: <code>output/coverage/pm25_location_days.csv</code>, <code>pm25_yearly_counts.csv</code> and <code>pm25_monthly_active.csv</code>. Written methodology: <code>docs/methodology.md</code>.</p>
+</section>
+
+<footer>OpenAQ data are licensed by their original providers. Built <span id="gen2"></span>.</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script>
+(function () {
+  "use strict";
+  var DATA = /*__REPORT_DATA__*/null;
+
+  var NAMES = { india: "India", pakistan: "Pakistan", nepal: "Nepal", bangladesh: "Bangladesh", bhutan: "Bhutan" };
+  var GAP_START = "2022-11", GAP_END = "2025-01";
+  var fmt = d3.format(",");
+  var pct = d3.format(".0%");
+  var years = DATA.years;
+  var countries = DATA.countries;
+  var cname = function (i) { return NAMES[countries[i]] || countries[i]; };
+  var WINDOW_DAYS = Math.round((Date.UTC(years[years.length - 1], 11, 31) - Date.UTC(years[0], 0, 1)) / 864e5) + 1;
+
+  // unpack compact rows
+  var locs = DATA.locs.map(function (r) {
+    return { c: r[0], name: r[1], lat: r[2], lon: r[3], monitor: r[4] === 1, sensors: r[5],
+             days: r[6], days75: r[7], first: r[8], last: r[9], byYear: r[10] };
+  });
+  var yearly = DATA.yearly.map(function (r) {
+    return { c: r[0], year: r[1], monitor: r[2] === 1, locations: r[3], locations30: r[4],
+             sensors: r[5], sensors30: r[6], locDays: r[7], locDays75: r[8] };
+  });
+  var monthly = DATA.monthly.map(function (r) { return { c: r[0], month: r[1], monitor: r[2] === 1, n: r[3] }; })
+    .filter(function (d) { return +d.month.slice(0, 4) <= years[years.length - 1]; });
+
+  function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+  function setText(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
+  function sum(arr, f) { return d3.sum(arr, f); }
+
+  // ---------- headline stats bound into the prose ----------
+  function fillStats() {
+    var withData = locs.filter(function (d) { return d.days > 0; });
+    var totDays = sum(locs, function (d) { return d.days; });
+    var totDays75 = sum(locs, function (d) { return d.days75; });
+    var india = countries.indexOf("india");
+    var indiaMon = sum(locs.filter(function (d) { return d.c === india && d.monitor; }), function (d) { return d.days; });
+    var sensors = sum(locs, function (d) { return d.sensors; });
+    setText("gen", DATA.generated); setText("gen2", DATA.generated);
+    setText("m-locs", fmt(locs.length)); setText("m-sensors", fmt(sensors));
+    setText("q-locs", fmt(locs.length)); setText("q-with", fmt(withData.length));
+    setText("q-days", fmt(totDays)); setText("q-pct75", pct(totDays75 / totDays));
+    setText("q-india-share", pct(indiaMon / totDays));
+    setText("c-silent", fmt(locs.length - withData.length));
+    setText("k-with", fmt(withData.length)); setText("k-locs", fmt(locs.length));
+    setText("k-days", fmt(totDays));
+    setText("k-india", pct(indiaMon / totDays));
+    var gs = GAP_START.split("-"), ge = GAP_END.split("-");
+    setText("k-gap", ((+ge[0] - +gs[0]) * 12 + (+ge[1] - +gs[1]) + 1) + " months");
+
+    var y30 = function (yr, mon, c) {
+      return sum(yearly.filter(function (d) {
+        return d.year === yr && (mon === undefined || d.monitor === mon) && (c === undefined || d.c === c);
+      }), function (d) { return d.locations30; });
+    };
+    setText("q-yearlist", [2019, 2020, 2021, 2022, 2023, 2024, 2025].map(function (y) { return y + ": " + fmt(y30(y)); }).join(", "));
+    setText("q-lc24", fmt(y30(2024, false))); setText("q-lc25", fmt(y30(2025, false)));
+    setText("q-in18", fmt(y30(2018, undefined, india))); setText("q-in22", fmt(y30(2022, undefined, india)));
+
+    var lc = locs.filter(function (d) { return !d.monitor && (countries[d.c] === "pakistan" || countries[d.c] === "nepal"); });
+    setText("q-lcmed", fmt(Math.round(d3.median(lc, function (d) { return d.days; }))));
+    var bd = countries.indexOf("bangladesh");
+    var bdLc = locs.filter(function (d) { return d.c === bd && !d.monitor; });
+    setText("q-bd-silent", bdLc.filter(function (d) { return d.days === 0; }).length + " of " + bdLc.length);
+
+    var im = function (m) { return sum(monthly.filter(function (d) { return d.c === india && d.month === m; }), function (d) { return d.n; }); };
+    setText("g-oct22", fmt(im("2022-10"))); setText("g-nov22", fmt(im("2022-11"))); setText("g-feb25", fmt(im("2025-02")));
+  }
+
+  // ---------- tooltip helper ----------
+  function showTip(tip, container, html, evt) {
+    tip.innerHTML = html;
+    tip.hidden = false;
+    var box = container.getBoundingClientRect();
+    var x = evt.clientX - box.left, y = evt.clientY - box.top;
+    var w = tip.offsetWidth, h = tip.offsetHeight;
+    var left = x + 14 + w > box.width ? x - w - 14 : x + 14;
+    var top = y - h - 12 < 0 ? y + 16 : y - h - 12;
+    tip.style.left = Math.max(0, left) + "px";
+    tip.style.top = top + "px";
+  }
+  function row(label, value) { return '<div class="tt-row"><span>' + label + "</span><b>" + value + "</b></div>"; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (ch) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]; }); }
+
+  // ---------- map ----------
+  var state = { yearIdx: -1, metric: "days", country: -1, playing: null };
+  var ext = DATA.extent; // [lon0, lon1, lat0, lat1]
+  var KX = Math.cos(21 * Math.PI / 180);
+  var MW = 1000, K = MW / ((ext[1] - ext[0]) * KX), MH = Math.round((ext[3] - ext[2]) * K);
+  var px = function (lon) { return (lon - ext[0]) * KX * K; };
+  var py = function (lat) { return (ext[3] - lat) * K; };
+  var LABELS = [["Pakistan", 68.6, 28.4], ["India", 78.6, 22.6], ["Nepal", 83.4, 29.0],
+                ["Bhutan", 90.6, 27.9], ["Bangladesh", 90.0, 22.0]];
+
+  function valueFor(d) {
+    if (state.yearIdx < 0) return state.metric === "days75" ? d.days75 : d.days;
+    return d.byYear[state.yearIdx];
+  }
+
+  function seqScale(max) {
+    return d3.scaleSequentialLog(d3.interpolateRgbBasis([css("--seq-lo"), css("--seq-mid"), css("--seq-hi")]))
+      .domain([1, max]).clamp(true);
+  }
+
+  function buildMap() {
+    var svg = d3.select("#map").attr("viewBox", "0 0 " + MW + " " + MH);
+    svg.selectAll("*").remove();
+    var pathStr = DATA.borders.map(function (ring) {
+      return "M" + ring.map(function (p) { return px(p[0]).toFixed(1) + "," + py(p[1]).toFixed(1); }).join("L") + "Z";
+    }).join("");
+    svg.append("rect").attr("width", MW).attr("height", MH).attr("fill", css("--surface"));
+    svg.append("path").attr("d", pathStr).attr("fill", css("--land")).attr("stroke", css("--land-edge"))
+      .attr("stroke-width", 0.8).attr("stroke-linejoin", "round");
+    svg.append("g").selectAll("text").data(LABELS).join("text")
+      .attr("x", function (d) { return px(d[1]); }).attr("y", function (d) { return py(d[2]); })
+      .attr("text-anchor", "middle").attr("fill", css("--ink-3")).attr("font-family", css("--f-display"))
+      .attr("font-size", 15).attr("letter-spacing", "0.04em").attr("opacity", 0.85).text(function (d) { return d[0]; });
+    svg.append("g").attr("class", "pts");
+    renderMap();
+
+    var frame = document.querySelector(".map-frame"), tip = document.getElementById("tip");
+    svg.on("pointermove pointerdown", function (evt) {
+      var d = evt.target.__data__;
+      if (!d || !d.sensors) { tip.hidden = true; return; }
+      var html = '<div class="tt-title">' + esc(d.name || "Unnamed location") + "</div>" +
+        row(cname(d.c), d.monitor ? "Reference monitor" : "Low-cost sensor") +
+        (state.yearIdx >= 0 ? row("Days in " + years[state.yearIdx], fmt(d.byYear[state.yearIdx])) : "") +
+        row("Days, 2015 to 2025", fmt(d.days)) + row("Days ≥75% of hours", fmt(d.days75)) +
+        row("PM2.5 sensors", d.sensors) +
+        (d.first ? row("Reporting", d.first + " to " + d.last) : row("Reporting", "never in window"));
+      showTip(tip, frame, html, evt);
+    }).on("pointerleave", function () { tip.hidden = true; });
+  }
+
+  function renderMap() {
+    var max = state.yearIdx < 0 ? WINDOW_DAYS : 366;
+    var color = seqScale(max);
+    var monitorSym = d3.symbol().type(d3.symbolCircle).size(46)();
+    var lowSym = d3.symbol().type(d3.symbolTriangle).size(50)();
+    var emptyMon = d3.symbol().type(d3.symbolCircle).size(26)();
+    var emptyLow = d3.symbol().type(d3.symbolTriangle).size(28)();
+    var surface = css("--surface"), empty = css("--empty");
+
+    var sorted = locs.slice().sort(function (a, b) { return valueFor(a) - valueFor(b); });
+    var g = d3.select("#map g.pts");
+    g.selectAll("path").data(sorted).join("path")
+      .attr("transform", function (d) { return "translate(" + px(d.lon).toFixed(1) + "," + py(d.lat).toFixed(1) + ")"; })
+      .attr("d", function (d) {
+        var v = valueFor(d);
+        return v > 0 ? (d.monitor ? monitorSym : lowSym) : (d.monitor ? emptyMon : emptyLow);
+      })
+      .attr("fill", function (d) { return valueFor(d) > 0 ? color(valueFor(d)) : "none"; })
+      .attr("stroke", function (d) { return valueFor(d) > 0 ? surface : empty; })
+      .attr("stroke-width", function (d) { return valueFor(d) > 0 ? 1.2 : 1; })
+      .attr("opacity", function (d) {
+        if (state.country >= 0 && d.c !== state.country) return 0.12;
+        return valueFor(d) > 0 ? 1 : 0.6;
+      })
+      .style("pointer-events", function (d) { return state.country >= 0 && d.c !== state.country ? "none" : null; });
+
+    // readout
+    var pool = state.country >= 0 ? locs.filter(function (d) { return d.c === state.country; }) : locs;
+    var on = pool.filter(function (d) { return valueFor(d) > 0; });
+    var mon = on.filter(function (d) { return d.monitor; }).length;
+    var where = state.country >= 0 ? " in " + cname(state.country) : "";
+    var when = state.yearIdx < 0 ? "between 2015 and 2025" : "in " + years[state.yearIdx];
+    var what = state.yearIdx < 0 && state.metric === "days75" ? "a day with ≥75% of hours " : "PM2.5 data ";
+    document.getElementById("map-readout").innerHTML = "<strong>" + fmt(on.length) + "</strong> of " + fmt(pool.length) +
+      " locations" + where + " have " + what + when + " (" + fmt(mon) + " monitors, " + fmt(on.length - mon) + " low-cost)";
+    renderLegend(max);
+    renderTape();
+  }
+
+  function renderLegend(max) {
+    var color = seqScale(max);
+    var stops = d3.range(0, 1.0001, 0.1).map(function (t) {
+      return color(Math.pow(max, t)) + " " + Math.round(t * 100) + "%";
+    }).join(",");
+    var ticks = max > 1000 ? [1, 10, 100, 1000, max] : [1, 10, 100, max];
+    var tickHtml = ticks.map(function (t) { return "<span>" + fmt(t) + "</span>"; }).join("");
+    var empty = css("--empty"), mid = css("--seq-mid");
+    var tri = d3.symbol().type(d3.symbolTriangle).size(60)(), cir = d3.symbol().type(d3.symbolCircle).size(56)();
+    document.getElementById("map-legend").innerHTML =
+      '<span class="ramp-wrap"><span>Days with data' + (state.yearIdx < 0 ? ", 2015 to 2025" : " in " + years[state.yearIdx]) + "</span>" +
+      '<span class="ramp" style="background:linear-gradient(90deg,' + stops + ')"></span>' +
+      '<span class="ramp-ticks">' + tickHtml + "</span></span>" +
+      '<span class="key"><svg width="14" height="14" viewBox="-7 -7 14 14"><path d="' + cir + '" fill="' + mid + '"/></svg>Reference monitor</span>' +
+      '<span class="key"><svg width="14" height="14" viewBox="-7 -7 14 14"><path d="' + tri + '" fill="' + mid + '"/></svg>Low-cost sensor</span>' +
+      '<span class="key"><svg width="14" height="14" viewBox="-7 -7 14 14"><path d="' + cir + '" fill="none" stroke="' + empty + '" stroke-width="1.3"/></svg>No data ' +
+      (state.yearIdx < 0 ? "in window" : "that year") + "</span>";
+  }
+
+  function renderTape() {
+    var pool = state.country >= 0 ? locs.filter(function (d) { return d.c === state.country; }) : locs;
+    var counts = years.map(function (y, i) { return pool.filter(function (d) { return d.byYear[i] > 0; }).length; });
+    var all = pool.filter(function (d) { return d.days > 0; }).length;
+    var max = Math.max(all, d3.max(counts)) || 1;
+    var items = [{ i: -1, label: "All", n: all }].concat(years.map(function (y, i) { return { i: i, label: String(y), n: counts[i] }; }));
+    var tape = d3.select("#tape");
+    tape.selectAll("button").data(items).join(function (enter) {
+      var b = enter.append("button").attr("type", "button");
+      b.append("span").attr("class", "bar");
+      b.append("span").attr("class", "yl");
+      return b;
+    })
+      .attr("aria-pressed", function (d) { return d.i === state.yearIdx ? "true" : "false"; })
+      .attr("aria-label", function (d) { return (d.i < 0 ? "All years" : d.label) + ": " + fmt(d.n) + " locations reporting"; })
+      .attr("title", function (d) { return fmt(d.n) + " locations reporting"; })
+      .classed("gap", function (d) {
+        var indiaInView = state.country < 0 || countries[state.country] === "india";
+        return indiaInView && (d.label === "2023" || d.label === "2024");
+      })
+      .on("click", function (evt, d) { stopPlay(); setYear(d.i); })
+      .each(function (d) {
+        d3.select(this).select(".bar").style("height", Math.max(1, Math.round(34 * d.n / max)) + "px");
+        d3.select(this).select(".yl").text(d.i < 0 ? "All" : "’" + d.label.slice(2));
+      });
+  }
+
+  function setYear(i) {
+    state.yearIdx = i;
+    var seg = document.querySelectorAll("#metric button");
+    for (var k = 0; k < seg.length; k++) {
+      seg[k].disabled = i >= 0;
+      seg[k].title = i >= 0 ? "The ≥75% split is available for the all-years total only" : "";
+    }
+    renderMap();
+  }
+
+  function stopPlay() {
+    if (state.playing) { clearInterval(state.playing); state.playing = null; }
+    document.getElementById("play").textContent = "Play";
+  }
+  function togglePlay() {
+    if (state.playing) { stopPlay(); return; }
+    var i = state.yearIdx >= years.length - 1 || state.yearIdx < 0 ? 0 : state.yearIdx + 1;
+    setYear(i);
+    document.getElementById("play").textContent = "Pause";
+    state.playing = setInterval(function () {
+      if (state.yearIdx >= years.length - 1) { stopPlay(); return; }
+      setYear(state.yearIdx + 1);
+    }, 1100);
+  }
+
+  function initControls() {
+    var opts = [{ v: -1, t: "All five" }].concat(countries.map(function (c, i) { return { v: i, t: cname(i) }; }));
+    var sel = document.getElementById("country");
+    sel.innerHTML = opts.map(function (o) { return '<option value="' + o.v + '">' + o.t + "</option>"; }).join("");
+    sel.addEventListener("change", function (e) { state.country = +e.target.value; renderMap(); renderMonthly(); });
+    document.getElementById("play").addEventListener("click", togglePlay);
+    var seg = document.querySelectorAll("#metric button");
+    for (var k = 0; k < seg.length; k++) {
+      seg[k].addEventListener("click", function (e) {
+        state.metric = e.currentTarget.getAttribute("data-metric");
+        for (var j = 0; j < seg.length; j++) seg[j].setAttribute("aria-checked", seg[j] === e.currentTarget ? "true" : "false");
+        renderMap();
+      });
+    }
+  }
+
+  // ---------- shared legend ----------
+  function typeLegend(id, line) {
+    var m = css("--monitor"), l = css("--lowcost");
+    var mark = function (c) {
+      return line ? '<svg width="18" height="8" viewBox="0 0 18 8"><line x1="0" y1="4" x2="18" y2="4" stroke="' + c + '" stroke-width="2.5" stroke-linecap="round"/></svg>'
+                  : '<svg width="12" height="12" viewBox="0 0 12 12"><rect width="12" height="12" rx="2" fill="' + c + '"/></svg>';
+    };
+    document.getElementById(id).innerHTML = '<span class="key">' + mark(m) + "Reference monitor</span>" +
+      '<span class="key">' + mark(l) + "Low-cost sensor</span>";
+  }
+
+  // ---------- yearly small multiples ----------
+  function renderYearly() {
+    typeLegend("yr-legend", false);
+    var host = d3.select("#yr-chart");
+    host.selectAll("*").remove();
+    var W = 220, H = 150, m = { t: 14, r: 4, b: 18, l: 30 };
+    var cm = css("--monitor"), cl = css("--lowcost"), surface = css("--surface");
+    var tip = document.getElementById("yr-tip"), panel = document.querySelector("#yr-chart").parentNode;
+
+    countries.forEach(function (c, ci) {
+      var rows = years.map(function (y) {
+        var mon = yearly.filter(function (d) { return d.c === ci && d.year === y && d.monitor; })[0];
+        var low = yearly.filter(function (d) { return d.c === ci && d.year === y && !d.monitor; })[0];
+        return { year: y, m: mon ? mon.locations30 : 0, l: low ? low.locations30 : 0 };
+      });
+      var maxV = d3.max(rows, function (r) { return r.m + r.l; });
+      var fig = host.append("figure");
+      fig.append("figcaption").text(cname(ci));
+      var svg = fig.append("svg").attr("viewBox", "0 0 " + W + " " + H).attr("role", "img")
+        .attr("aria-label", cname(ci) + " active PM2.5 locations per year: " + rows.map(function (r) { return r.year + " " + (r.m + r.l); }).join(", "));
+      var x = d3.scaleBand().domain(years).range([m.l, W - m.r]).padding(0.22);
+      var y = d3.scaleLinear().domain([0, Math.max(maxV, 1)]).nice(3).range([H - m.b, m.t]);
+      svg.append("g").attr("class", "grid").selectAll("line").data(y.ticks(3).filter(function (t) { return t > 0; })).join("line")
+        .attr("x1", m.l).attr("x2", W - m.r).attr("y1", y).attr("y2", y);
+      svg.append("g").selectAll("text").data(y.ticks(3).filter(Number.isInteger)).join("text")
+        .attr("x", m.l - 5).attr("y", y).attr("dy", "0.32em").attr("text-anchor", "end").text(fmt);
+      svg.append("g").selectAll("text").data(years.filter(function (yy, i) { return i % 2 === 1 || yy === years[years.length - 1]; })).join("text")
+        .attr("x", function (yy) { return x(yy) + x.bandwidth() / 2; }).attr("y", H - 4).attr("text-anchor", "middle")
+        .text(function (yy) { return "’" + String(yy).slice(2); });
+      svg.append("line").attr("x1", m.l).attr("x2", W - m.r).attr("y1", y(0)).attr("y2", y(0)).attr("stroke", css("--ink-3"));
+
+      if (maxV === 0) {
+        svg.append("text").attr("class", "lbl").attr("x", (m.l + W) / 2).attr("y", H / 2).attr("text-anchor", "middle")
+          .text("No location reached 30 days in any year");
+        return;
+      }
+      if (c === "india") {
+        svg.insert("rect", ":first-child").attr("x", x(2023) - 2).attr("width", x(2024) + x.bandwidth() - x(2023) + 4)
+          .attr("y", m.t).attr("height", y(0) - m.t).attr("fill", css("--band"));
+        svg.append("text").attr("class", "warn").attr("x", x(2023) + (x(2024) + x.bandwidth() - x(2023)) / 2)
+          .attr("y", m.t + 8).attr("text-anchor", "middle").text("gap");
+      }
+      var gBars = svg.append("g");
+      rows.forEach(function (r) {
+        var x0 = x(r.year), bw = x.bandwidth();
+        if (r.m > 0) gBars.append("rect").attr("x", x0).attr("width", bw).attr("y", y(r.m)).attr("height", y(0) - y(r.m))
+          .attr("fill", cm).attr("rx", 1.5).datum(r);
+        if (r.l > 0) gBars.append("rect").attr("x", x0).attr("width", bw).attr("y", y(r.m + r.l))
+          .attr("height", Math.max(0.5, y(r.m) - y(r.m + r.l) - (r.m > 0 ? 1.5 : 0)))
+          .attr("fill", cl).attr("rx", 1.5).datum(r);
+        // hit target taller than the mark
+        gBars.append("rect").attr("x", x0 - 1).attr("width", bw + 2).attr("y", m.t).attr("height", y(0) - m.t)
+          .attr("fill", "transparent").datum(r);
+      });
+      // direct labels on the peak and the final year only
+      var peak = rows.reduce(function (a, b) { return b.m + b.l > a.m + a.l ? b : a; });
+      [peak, rows[rows.length - 1]].filter(function (r, i, arr) { return arr.indexOf(r) === i && r.m + r.l > 0; }).forEach(function (r) {
+        svg.append("text").attr("class", "lbl").attr("x", x(r.year) + x.bandwidth() / 2).attr("y", y(r.m + r.l) - 4)
+          .attr("text-anchor", "middle").text(fmt(r.m + r.l));
+      });
+      gBars.on("pointermove", function (evt) {
+        var r = evt.target.__data__; if (!r) return;
+        showTip(tip, panel, '<div class="tt-title">' + cname(ci) + ", " + r.year + "</div>" +
+          row('<span class="sw" style="background:' + cm + '"></span>Monitors', fmt(r.m)) +
+          row('<span class="sw" style="background:' + cl + '"></span>Low-cost', fmt(r.l)) +
+          row("Total", fmt(r.m + r.l)), evt);
+      }).on("pointerleave", function () { tip.hidden = true; });
+    });
+
+    // table view
+    var head = "<thead><tr><th>Country</th>" + years.map(function (y) { return "<th>" + y + "</th>"; }).join("") + "</tr></thead>";
+    var body = countries.map(function (c, ci) {
+      return "<tr><td>" + cname(ci) + "</td>" + years.map(function (y) {
+        var v = sum(yearly.filter(function (d) { return d.c === ci && d.year === y; }), function (d) { return d.locations30; });
+        var gap = c === "india" && (y === 2023 || y === 2024);
+        return '<td class="' + (gap ? "gapcell" : "") + '">' + fmt(v) + "</td>";
+      }).join("") + "</tr>";
+    }).join("");
+    [["All, monitors", true], ["All, low-cost", false]].forEach(function (pair) {
+      body += '<tr class="' + (pair[1] ? "total" : "") + '"><td>' + pair[0] + "</td>" + years.map(function (y) {
+        return "<td>" + fmt(sum(yearly.filter(function (d) { return d.year === y && d.monitor === pair[1]; }), function (d) { return d.locations30; })) + "</td>";
+      }).join("") + "</tr>";
+    });
+    document.getElementById("yr-table").innerHTML = head + "<tbody>" + body + "</tbody>";
+  }
+
+  // ---------- monthly lines ----------
+  function renderMonthly() {
+    typeLegend("mo-legend", true);
+    var host = d3.select("#mo-chart");
+    host.select("svg").remove();
+    var sel = state.country;
+    var parse = d3.timeParse("%Y-%m");
+    var months = d3.timeMonths(new Date(years[0], 0, 1), new Date(years[years.length - 1], 11, 2));
+    var key = d3.timeFormat("%Y-%m");
+    var pool = monthly.filter(function (d) { return sel < 0 || d.c === sel; });
+    var roll = d3.rollup(pool, function (v) { return d3.sum(v, function (d) { return d.n; }); }, function (d) { return d.month; }, function (d) { return d.monitor; });
+    var series = months.map(function (dt) {
+      var r = roll.get(key(dt));
+      return { date: dt, m: r ? (r.get(true) || 0) : 0, l: r ? (r.get(false) || 0) : 0 };
+    });
+    var W = Math.max(320, host.node().clientWidth), H = W < 600 ? 240 : 300, mg = { t: 16, r: 14, b: 26, l: 44 };
+    var svg = host.insert("svg", ".tooltip").attr("viewBox", "0 0 " + W + " " + H).attr("role", "img")
+      .attr("aria-label", "Locations reporting PM2.5 each month, " + (sel < 0 ? "all five countries" : cname(sel)));
+    var x = d3.scaleTime().domain(d3.extent(months)).range([mg.l, W - mg.r]);
+    var y = d3.scaleLinear().domain([0, Math.max(1, d3.max(series, function (s) { return Math.max(s.m, s.l); }))]).nice(4).range([H - mg.b, mg.t]);
+    var g0 = parse(GAP_START), g1 = d3.timeMonth.offset(parse(GAP_END), 1);
+    if (sel < 0 || countries[sel] === "india") {
+      svg.append("rect").attr("x", x(g0)).attr("width", x(g1) - x(g0)).attr("y", mg.t).attr("height", H - mg.b - mg.t).attr("fill", css("--band"));
+      svg.append("text").attr("class", "warn").attr("x", (x(g0) + x(g1)) / 2).attr("y", mg.t + 14).attr("text-anchor", "middle")
+        .text(W < 600 ? "India gap" : "India reference data missing");
+    }
+    svg.append("g").attr("class", "grid").selectAll("line").data(y.ticks(4).filter(function (t) { return t > 0; })).join("line")
+      .attr("x1", mg.l).attr("x2", W - mg.r).attr("y1", y).attr("y2", y);
+    svg.append("g").selectAll("text").data(y.ticks(4)).join("text").attr("x", mg.l - 8).attr("y", y).attr("dy", "0.32em")
+      .attr("text-anchor", "end").text(fmt);
+    svg.append("g").selectAll("text").data(years.filter(function (yy, i) { return W >= 600 || i % 2 === 1; })).join("text").attr("x", function (yy) { return x(new Date(yy, 0, 1)); })
+      .attr("y", H - 6).attr("text-anchor", "start").text(String);
+    svg.append("line").attr("x1", mg.l).attr("x2", W - mg.r).attr("y1", y(0)).attr("y2", y(0)).attr("stroke", css("--ink-3"));
+    [["m", css("--monitor")], ["l", css("--lowcost")]].forEach(function (p) {
+      svg.append("path").datum(series).attr("fill", "none").attr("stroke", p[1]).attr("stroke-width", 2.2)
+        .attr("stroke-linejoin", "round").attr("d", d3.line().x(function (s) { return x(s.date); }).y(function (s) { return y(s[p[0]]); }));
+    });
+    var cross = svg.append("line").attr("y1", mg.t).attr("y2", H - mg.b).attr("stroke", css("--ink-3")).attr("opacity", 0);
+    var dots = [["m", css("--monitor")], ["l", css("--lowcost")]].map(function (p) {
+      return svg.append("circle").attr("r", 4.5).attr("fill", p[1]).attr("stroke", css("--surface")).attr("stroke-width", 2).attr("opacity", 0).datum(p[0]);
+    });
+    var tip = document.getElementById("mo-tip"), wrap = document.getElementById("mo-chart");
+    var bis = d3.bisector(function (s) { return s.date; }).center;
+    var mf = d3.timeFormat("%B %Y");
+    svg.append("rect").attr("x", mg.l).attr("y", mg.t).attr("width", W - mg.l - mg.r).attr("height", H - mg.t - mg.b).attr("fill", "transparent")
+      .on("pointermove", function (evt) {
+        var pt = d3.pointer(evt, svg.node());
+        var s = series[bis(series, x.invert(pt[0]))];
+        cross.attr("x1", x(s.date)).attr("x2", x(s.date)).attr("opacity", 1);
+        dots.forEach(function (dot) { dot.attr("cx", x(s.date)).attr("cy", y(s[dot.datum()])).attr("opacity", 1); });
+        showTip(tip, wrap, '<div class="tt-title">' + mf(s.date) + "</div>" +
+          row('<span class="sw" style="background:' + css("--monitor") + '"></span>Monitors', fmt(s.m)) +
+          row('<span class="sw" style="background:' + css("--lowcost") + '"></span>Low-cost', fmt(s.l)), evt);
+      })
+      .on("pointerleave", function () { tip.hidden = true; cross.attr("opacity", 0); dots.forEach(function (d) { d.attr("opacity", 0); }); });
+  }
+
+  // ---------- record-length histogram ----------
+  function renderLength() {
+    typeLegend("len-legend", false);
+    var host = d3.select("#len-chart");
+    host.select("svg").remove();
+    var step = 182.625, nb = Math.ceil(WINDOW_DAYS / step);
+    var bins = d3.range(nb).map(function (i) { return { i: i, lo: Math.round(i * step), hi: Math.round((i + 1) * step) - 1, m: 0, l: 0 }; });
+    locs.forEach(function (d) {
+      var b = bins[Math.min(nb - 1, Math.floor(d.days / step))];
+      if (d.monitor) b.m++; else b.l++;
+    });
+    var W = Math.max(320, host.node().clientWidth), H = W < 600 ? 230 : 280, mg = { t: 16, r: 10, b: 40, l: 44 };
+    var svg = host.insert("svg", ".tooltip").attr("viewBox", "0 0 " + W + " " + H).attr("role", "img")
+      .attr("aria-label", "Histogram of days with PM2.5 data per location, by sensor type");
+    var x0 = d3.scaleBand().domain(bins.map(function (b) { return b.i; })).range([mg.l, W - mg.r]).paddingInner(0.18);
+    var x1 = d3.scaleBand().domain(["m", "l"]).range([0, x0.bandwidth()]).padding(0.06);
+    var y = d3.scaleLinear().domain([0, d3.max(bins, function (b) { return Math.max(b.m, b.l); })]).nice(4).range([H - mg.b, mg.t]);
+    svg.append("g").attr("class", "grid").selectAll("line").data(y.ticks(4).filter(function (t) { return t > 0; })).join("line")
+      .attr("x1", mg.l).attr("x2", W - mg.r).attr("y1", y).attr("y2", y);
+    svg.append("g").selectAll("text").data(y.ticks(4)).join("text").attr("x", mg.l - 8).attr("y", y).attr("dy", "0.32em")
+      .attr("text-anchor", "end").text(fmt);
+    svg.append("g").selectAll("text").data(bins.filter(function (b) { return b.i % 2 === 0; })).join("text")
+      .attr("x", function (b) { return x0(b.i); }).attr("y", H - mg.b + 16)
+      .text(function (b) { return b.i === 0 ? "0 days" : (b.i / 2) + " yr"; });
+    svg.append("text").attr("class", "lbl").attr("x", W - mg.r).attr("y", H - 4).attr("text-anchor", "end")
+      .text("Days with PM2.5 data, 2015 to 2025");
+    svg.append("line").attr("x1", mg.l).attr("x2", W - mg.r).attr("y1", y(0)).attr("y2", y(0)).attr("stroke", css("--ink-3"));
+    var colors = { m: css("--monitor"), l: css("--lowcost") };
+    var g = svg.append("g");
+    bins.forEach(function (b) {
+      ["m", "l"].forEach(function (k) {
+        if (b[k] > 0) g.append("rect").attr("x", x0(b.i) + x1(k)).attr("width", x1.bandwidth()).attr("y", y(b[k]))
+          .attr("height", y(0) - y(b[k])).attr("rx", 2).attr("fill", colors[k]).datum(b);
+      });
+      g.append("rect").attr("x", x0(b.i)).attr("width", x0.bandwidth()).attr("y", mg.t).attr("height", y(0) - mg.t)
+        .attr("fill", "transparent").datum(b);
+    });
+    var tip = document.getElementById("len-tip"), wrap = document.getElementById("len-chart");
+    g.on("pointermove", function (evt) {
+      var b = evt.target.__data__; if (!b) return;
+      showTip(tip, wrap, '<div class="tt-title">' + fmt(b.lo) + " to " + fmt(b.hi) + " days</div>" +
+        row('<span class="sw" style="background:' + colors.m + '"></span>Monitors', fmt(b.m)) +
+        row('<span class="sw" style="background:' + colors.l + '"></span>Low-cost', fmt(b.l)), evt);
+    }).on("pointerleave", function () { tip.hidden = true; });
+  }
+
+  // ---------- network size table ----------
+  function renderSizeTable() {
+    var head = "<thead><tr><th>Country</th><th class=\"l\">Type</th><th>Locations</th><th>With data</th><th>PM2.5 sensors</th>" +
+      "<th>Location-days</th><th>Days ≥75%</th><th>Median days</th></tr></thead>";
+    var body = "";
+    var line = function (label, type, set, cls) {
+      return '<tr class="' + (cls || "") + '"><td>' + label + '</td><td class="l">' + type + "</td><td>" + fmt(set.length) + "</td><td>" +
+        fmt(set.filter(function (d) { return d.days > 0; }).length) + "</td><td>" + fmt(sum(set, function (d) { return d.sensors; })) +
+        "</td><td>" + fmt(sum(set, function (d) { return d.days; })) + "</td><td>" + fmt(sum(set, function (d) { return d.days75; })) +
+        "</td><td>" + (set.length ? fmt(Math.round(d3.median(set, function (d) { return d.days; }))) : "") + "</td></tr>";
+    };
+    countries.forEach(function (c, ci) {
+      [true, false].forEach(function (mon) {
+        var set = locs.filter(function (d) { return d.c === ci && d.monitor === mon; });
+        if (set.length) body += line(cname(ci), mon ? "Monitor" : "Low-cost", set);
+      });
+    });
+    body += line("All five", "Both", locs, "total");
+    document.getElementById("size-table").innerHTML = head + "<tbody>" + body + "</tbody>";
+  }
+
+  function renderThemed() { buildMap(); renderYearly(); renderMonthly(); renderLength(); }
+
+  fillStats();
+  initControls();
+  renderThemed();
+  renderSizeTable();
+
+  // charts read colors from CSS tokens, so redraw when the theme changes
+  var mq = window.matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", renderThemed);
+  var lastW = window.innerWidth, rt = null;
+  window.addEventListener("resize", function () {
+    if (window.innerWidth === lastW) return;
+    lastW = window.innerWidth;
+    clearTimeout(rt);
+    rt = setTimeout(function () { renderMonthly(); renderLength(); }, 150);
+  });
+  new MutationObserver(renderThemed).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+})();
+</script>
